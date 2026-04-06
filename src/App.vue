@@ -4,18 +4,27 @@
     <Sidebar 
       :channels="channels"
       :current-channel-id="currentChannelId"
+      :sidebar-open="sidebarOpen"
       @channel-select="handleChannelSelect"
+      @toggle-sidebar="sidebarOpen = !sidebarOpen"
     />
     
     <!-- 主内容区 -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden min-w-0">
       <!-- 顶部栏 -->
       <header class="h-12 bg-discord-gray border-b border-discord-darker flex items-center px-4">
-        <h1 class="text-lg font-semibold text-discord-text">
+        <!-- Mobile menu button -->
+        <button 
+          class="mr-3 text-discord-muted hover:text-white md:hidden"
+          @click="sidebarOpen = true"
+        >
+          ☰
+        </button>
+        <h1 class="text-lg font-semibold text-discord-text truncate">
           {{ currentChannel?.icon }} {{ currentChannel?.name || 'OPC搭子社区' }}
         </h1>
-        <div class="ml-auto flex items-center gap-2">
-          <span class="text-discord-muted text-sm">{{ currentChannel?.description }}</span>
+        <div class="ml-auto flex items-center gap-2 flex-shrink-0">
+          <span class="text-discord-muted text-sm hidden sm:block">{{ currentChannel?.description }}</span>
         </div>
       </header>
       
@@ -40,7 +49,7 @@
         <!-- 欢迎页 -->
         <div 
           v-if="!currentChannelId"
-          class="flex-1 flex items-center justify-center text-discord-muted"
+          class="flex-1 flex items-center justify-center text-discord-muted p-4"
         >
           <div class="text-center">
             <div class="text-6xl mb-4">🏢</div>
@@ -76,12 +85,10 @@ const channels = ref<ChannelTreeNode[]>([])
 const currentChannelId = ref<number | null>(null)
 const currentThreadId = ref<number | null>(null)
 const showCreateModal = ref(false)
+const sidebarOpen = ref(true)
 
-// 计算属性
 const currentChannel = computed(() => {
   if (!currentChannelId.value) return null
-  
-  // 搜索函数
   const findChannel = (nodes: ChannelTreeNode[]): ChannelTreeNode | null => {
     for (const node of nodes) {
       if (node.id === currentChannelId.value) return node
@@ -92,11 +99,9 @@ const currentChannel = computed(() => {
     }
     return null
   }
-  
   return findChannel(channels.value)
 })
 
-// 方法
 const loadChannels = async () => {
   try {
     channels.value = await channelApi.getChannels()
@@ -123,11 +128,7 @@ const handleThreadCreated = (threadId: number) => {
   currentThreadId.value = threadId
 }
 
-// 生命周期
 onMounted(() => {
   loadChannels()
 })
 </script>
-
-<style scoped>
-</style>
